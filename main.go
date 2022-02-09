@@ -2,36 +2,26 @@ package main
 
 import (
 	"context"
+	"embed"
 	_ "embed"
+	"log"
 	"math/rand"
 	"sync"
 	"time"
 
 	"github.com/go-vgo/robotgo"
-	"github.com/wailsapp/wails"
+	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/options"
 )
 
 // noOpCancel is a no-op function for that satisfies the
 // context.CancelFunc type.
 func noOpCancel() {}
 
-//go:embed frontend/build/static/js/main.js
-var js string
-
-//go:embed frontend/build/static/css/main.css
-var css string
+//go:embed frontend/build
+var assets embed.FS
 
 func main() {
-	// Create the Wails app
-	app := wails.CreateApp(&wails.AppConfig{
-		Width:  700,
-		Height: 768,
-		Title:  "The Wiggler",
-		JS:     js,
-		CSS:    css,
-		Colour: "#131313",
-	})
-
 	// Create a context to cancel the wiggler
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -156,10 +146,19 @@ func main() {
 		wg.Wait() // Wait for any wiggle events to finish...
 	}()
 
-	// Bind the wiggler
-	app.Bind(wiggler)
-
 	// Run the app
-	app.Run()
-
+	err := wails.Run(&options.App{
+		Title:  "The Wiggler",
+		Width:  700,
+		Height: 768,
+		Assets: assets,
+		Bind: []interface{}{
+			wiggler,
+		},
+		OnStartup:  wiggler.OnStartup,
+		OnShutdown: wiggler.OnShutdown,
+	})
+	if err != nil {
+		log.Panic(err)
+	}
 }

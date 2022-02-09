@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
-	"github.com/wailsapp/wails"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go.uber.org/atomic"
 )
 
@@ -28,9 +29,7 @@ func NewDefaultWiggleConfig() WiggleConfig {
 }
 
 type Wiggler struct {
-	runtime *wails.Runtime      // Pointer to Wails runtime
-	logger  *wails.CustomLogger // Pointer to Wails logger
-
+	ctx    context.Context // The wails context
 	config struct {
 		lock      sync.RWMutex // Locks the wiggler's config data
 		moveSpeed int          // How fast should the wiggler move? (in seconds)
@@ -104,50 +103,44 @@ func (w *Wiggler) GetConfig() WiggleConfig {
 }
 
 func (w *Wiggler) SetConfig(speed, wait int) {
-	w.logger.Debugf("Setting wiggler config to speed: %d, wait: %d", speed, wait)
+	runtime.LogInfo(w.ctx, fmt.Sprintf("Setting wiggler config to speed: %d, wait: %d", speed, wait))
 	w.config.lock.Lock()
 	defer w.config.lock.Unlock()
 	w.config.moveSpeed = speed
 	w.config.waitTime = wait
 }
 
-func (w *Wiggler) WailsInit(runtime *wails.Runtime) error {
+func (w *Wiggler) OnStartup(ctx context.Context) {
 	// Save runtime
-	w.runtime = runtime
-	w.logger = runtime.Log.New("Wiggler")
-	w.logger.Info("Wiggler initialised")
-
-	// Emit a startup event
-	w.runtime.Events.Emit("ready")
+	w.ctx = ctx
+	runtime.LogInfo(ctx, "Wiggler initialised")
 
 	// Set ready-ness
 	w.isReady.Store(true)
-
-	return nil
 }
 
-func (w *Wiggler) WailsShutdown() {
-	w.CancelWiggler()
+func (w *Wiggler) OnDomReady(ctx context.Context) {
+	// Emit a startup event
+	runtime.EventsEmit(w.ctx, "ready")
+}
 
-	// Emit a shutdown event
-	// w.runtime.Events.Emit("stopped")
+func (w *Wiggler) OnShutdown(ctx context.Context) {
+	w.CancelWiggler()
 }
 
 func (w *Wiggler) StartWiggle() {
-	w.logger.Debug("Starting wiggle")
+	runtime.LogInfo(w.ctx, "Starting wiggle")
 	w.wevents <- WiggleEventStart
-	// w.runtime.Events.Emit("wiggle-started")
 }
 
 func (w *Wiggler) StopWiggle() {
-	w.logger.Debug("Starting wiggle")
+	runtime.LogInfo(w.ctx, "Starting wiggle")
 	w.wevents <- WiggleEventStop
-	// w.runtime.Events.Emit("wiggle-stopped")
 }
 
 // CancelWiggler cancels the whole wiggler loop
 func (w *Wiggler) CancelWiggler() {
-	w.logger.Info("Cancelling wiggler")
+	runtime.LogInfo(w.ctx, "Cancelling wiggler")
 
 	// Cancel the wiggler, if it's running
 	if w.cancel != nil {

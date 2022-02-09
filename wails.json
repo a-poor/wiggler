@@ -1,0 +1,12 @@
+{
+ "name": "The Wiggler",
+ "description": "The Wiggler helps you keep your computer awake by wiggling your mouse around.",
+ "author": {
+  "name": "a-poor",
+  "email": "45295232+a-poor@users.noreply.github.com"
+ },
+ "version": "0.1.0",
+ "outputfilename": "the-wiggler",
+ "frontend:install": "npm i",
+ "frontend:build": "npm run build"
+}
