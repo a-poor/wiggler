@@ -1,21 +1,21 @@
 {
  "name": "The Wiggler",
- "description": "Enter your project description",
+ "description": "The Wiggler helps you keep your computer awake by wiggling your mouse around.",
  "author": {
   "name": "a-poor",
   "email": "45295232+a-poor@users.noreply.github.com"
  },
  "version": "0.1.0",
- "binaryname": "wiggler",
+ "binaryname": "the-wiggler",
  "frontend": {
   "dir": "frontend",
-  "install": "npm install",
-  "build": "npm run build",
+  "install": "NODE_OPTIONS=--openssl-legacy-provider npm i",
+  "build": "NODE_OPTIONS=--openssl-legacy-provider npm run build",
   "bridge": "src",
-  "serve": "npm run serve"
+  "serve": "NODE_OPTIONS=--openssl-legacy-provider npm run serve"
  },
  "tags": "",
- "WailsVersion": "",
+ "WailsVersion": "1.16.8",
  "CrossCompile": false,
  "Platform": "",
  "Architecture": "",

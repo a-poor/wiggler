@@ -9,10 +9,9 @@ import * as Wails from '@wailsapp/runtime';
 
 Wails.Init(() => {
   ReactDOM.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
-    document.getElementById("app")
+    // <React.StrictMode><App /></React.StrictMode>,
+    <App />,
+    document.getElementById("root")
   );
 });
 
