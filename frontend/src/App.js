@@ -12,7 +12,6 @@ import {
   Slider,
   Tooltip,
   message,
-  Switch,
 } from 'antd';
 
 import {
@@ -147,7 +146,7 @@ function App() {
       const wiggleState = await window.go.main.Wiggler.IsWiggling()
       await setIsWiggling(wiggleState);
     });
-  }, []);
+  }, isWiggling);
 
   // Register Wails event trigger functions
   useEffect(() => {
