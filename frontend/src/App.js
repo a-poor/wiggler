@@ -12,6 +12,7 @@ import {
   Slider,
   Tooltip,
   message,
+  Switch,
 } from 'antd';
 
 import {
@@ -30,7 +31,7 @@ function WiggleOptions({ isReady, isWiggling, wiggleDuration, waitTime, setWiggl
     if (!isReady) return;
 
     // Send config to backend
-    await window.backend.Wiggler.SetConfig(wiggleSpeed, waitTime).then(() => {
+    await window.go.main.Wiggler.SetConfig(wiggleSpeed, waitTime).then(() => {
       message.success("Updated Wiggle Config!");
     }).catch(err => {
       message.error("Error Setting Wiggle Config");
@@ -39,12 +40,12 @@ function WiggleOptions({ isReady, isWiggling, wiggleDuration, waitTime, setWiggl
 
     // Restart (if already started)
     if (isWiggling) {
-      await window.backend.Wiggler.StartWiggle();
+      await window.go.main.Wiggler.StartWiggle();
     }
 
     // Get config from backend
-    const newWiggleSpeed = await window.backend.Wiggler.GetMoveSpeed();
-    const newWaitTime = await window.backend.Wiggler.GetWaitTime();
+    const newWiggleSpeed = await window.go.main.Wiggler.GetMoveSpeed();
+    const newWaitTime = await window.go.main.Wiggler.GetWaitTime();
 
     form.setFieldsValue({
       wiggleSpeed: newWiggleSpeed,
@@ -64,7 +65,6 @@ function WiggleOptions({ isReady, isWiggling, wiggleDuration, waitTime, setWiggl
   return (
     <div className="wiggle-options">
       <Divider />
-
       <Title level={4}>
         Wiggler Options
       </Title>
@@ -78,27 +78,27 @@ function WiggleOptions({ isReady, isWiggling, wiggleDuration, waitTime, setWiggl
         }}
       >
         <Form.Item 
-          label="How slowly does the mouse move?"
+          label="Wiggle for"
           name="wiggleSpeed"
         >
           <Slider 
             min={0.1}
             max={10}
-            step={0.1}
-            tipFormatter={(value) => `${value}s`}
+            step={1}
+            tipFormatter={(value) => `${value} second${ value === 1 ? "" : "s" }`}
             tooltipVisible
           />
         </Form.Item>
         <div style={{ height: "10px", }} />
         <Form.Item 
-          label="How long does it wait between moves?"
+          label="Before wiggling again, wait"
           name="waitTime"
         >
           <Slider 
             min={0}
             max={60}
             step={1}
-            tipFormatter={(value) => `${value}s`}
+            tipFormatter={(value) => `${value} second${ value === 1 ? "" : "s" }`}
             tooltipVisible
           />
         </Form.Item>
@@ -134,32 +134,42 @@ function App() {
   const [wiggleDuration, setWiggleDuration] = useState(1);
   const [waitTime, setWaitTime] = useState(2);
 
+  useEffect(() => {
+    document.addEventListener("keydown", async (e) => {
+      // If the "Escape" key is pressed and a wiggle event is occuring...
+      if (!isWiggling) return;
+      if (e.key !== "Escape" || e.key !== " " || e.key !== "Enter" || e.key !== "q") return;
+
+      // Stop the wiggle
+      await window.go.main.Wiggler.StopWiggle()
+
+      // Set the state
+      const wiggleState = await window.go.main.Wiggler.IsWiggling()
+      await setIsWiggling(wiggleState);
+    });
+  }, []);
+
   // Register Wails event trigger functions
   useEffect(() => {
-    // // Run when the backend is ready
-    // window.backend.Wiggler.IsReady().then(() => {
-    //   setIsReady(true);
-    // });
-
     // Run when wiggler config is confirmed
-    window.wails.Events.On("config-set", ({duration, time}) => {
+    window.runtime.EventsOn("config-set", ({duration, time}) => {
       console.log("config-set", duration, time);
       // setWiggleDuration(duration);
       // setWaitTime(time);
     });
 
     // Run when a wiggler START event is confirmed
-    window.wails.Events.On("wiggle-started", () => {
+    window.runtime.EventsOn("wiggle-started", () => {
       setIsWiggling(true);
     });
 
     // Run when a wiggler STOP event is confirmed
-    window.wails.Events.On("wiggle-stopped", () => {
+    window.runtime.EventsOn("wiggle-stopped", () => {
       setIsWiggling(true);
     });
 
     // Run when the backend is stopping
-    window.wails.Events.On("stopped", () => {
+    window.runtime.EventsOn("stopped", () => {
       setIsReady(false);
       setIsWiggling(false);
     });
@@ -173,10 +183,6 @@ function App() {
         maxWidth: "600px",
         margin: "0 auto",
         padding: "20px",
-        // border: "1px solid #ccc",
-      }}
-      onKeyPress={(e) => {
-        console.log(e.key);
       }}
     >
       <Title>The Wiggler</Title>
@@ -198,11 +204,11 @@ function App() {
             disabled={!isReady}
             onClick={async () => {
               if (isWiggling) {
-                await window.backend.Wiggler.StopWiggle();
+                await window.go.main.Wiggler.StopWiggle();
               } else {
-                await window.backend.Wiggler.StartWiggle();
+                await window.go.main.Wiggler.StartWiggle();
               }
-              const wiggleState = await window.backend.Wiggler.IsWiggling();
+              const wiggleState = await window.go.main.Wiggler.IsWiggling();
               setIsWiggling(wiggleState);
             }}
           >
@@ -212,7 +218,14 @@ function App() {
             <Button
               type="secondary"
               icon={optionsVisible ? <UpOutlined /> : <DownOutlined />}
-              onClick={() => setOptionsVisible(!optionsVisible)}
+              onClick={async () => {
+                if (optionsVisible) {
+                  await window.go.main.Wiggler.SetWindowSmall();
+                } else {
+                  await window.go.main.Wiggler.SetWindowLarge();
+                }
+                setOptionsVisible(!optionsVisible)
+              }}
             />
           </Tooltip>
         </Space>

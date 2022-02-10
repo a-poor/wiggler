@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"embed"
-	_ "embed"
+	"fmt"
 	"log"
 	"math/rand"
 	"sync"
@@ -12,6 +12,12 @@ import (
 	"github.com/go-vgo/robotgo"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
+	"github.com/wailsapp/wails/v2/pkg/options/mac"
+)
+
+const (
+	version = "0.1.0"
+	github  = "https://github.com/a-poor/wiggler"
 )
 
 // noOpCancel is a no-op function for that satisfies the
@@ -20,6 +26,9 @@ func noOpCancel() {}
 
 //go:embed frontend/build
 var assets embed.FS
+
+//go:embed apple-icon.png
+var macIcon []byte
 
 func main() {
 	// Create a context to cancel the wiggler
@@ -148,15 +157,23 @@ func main() {
 
 	// Run the app
 	err := wails.Run(&options.App{
-		Title:  "The Wiggler",
-		Width:  700,
-		Height: 768,
-		Assets: assets,
+		Title:         "The Wiggler",
+		DisableResize: true,
+		Width:         WindowWidth,
+		Height:        WindowSmallHeight,
+		Assets:        assets,
 		Bind: []interface{}{
 			wiggler,
 		},
 		OnStartup:  wiggler.OnStartup,
 		OnShutdown: wiggler.OnShutdown,
+		Mac: &mac.Options{
+			About: &mac.AboutInfo{
+				Title:   "The Wiggler",
+				Message: fmt.Sprintf("Version: %s\n(c) 2022 Austin Poor\n%s", version, github),
+				Icon:    macIcon,
+			},
+		},
 	})
 	if err != nil {
 		log.Panic(err)

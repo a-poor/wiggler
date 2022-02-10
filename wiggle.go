@@ -9,6 +9,12 @@ import (
 	"go.uber.org/atomic"
 )
 
+const (
+	WindowWidth       = 600 // Fixed window width
+	WindowSmallHeight = 300 // Height of the window when details closed
+	WindowLargeHeight = 600 // Height of the window when details open
+)
+
 type WiggleEvent int
 
 const (
@@ -59,6 +65,14 @@ func NewWiggler(cancel context.CancelFunc, wevents chan WiggleEvent, cfg WiggleC
 		cancel:     cancel,
 		wevents:    wevents,
 	}
+}
+
+func (w *Wiggler) SetWindowSmall() {
+	runtime.WindowSetSize(w.ctx, WindowWidth, WindowSmallHeight)
+}
+
+func (w *Wiggler) SetWindowLarge() {
+	runtime.WindowSetSize(w.ctx, WindowWidth, WindowLargeHeight)
 }
 
 func (w *Wiggler) IsReady() bool {

@@ -1,12 +1,16 @@
 {
- "name": "The Wiggler",
- "description": "The Wiggler helps you keep your computer awake by wiggling your mouse around.",
- "author": {
-  "name": "a-poor",
-  "email": "45295232+a-poor@users.noreply.github.com"
- },
- "version": "0.1.0",
- "outputfilename": "the-wiggler",
- "frontend:install": "npm i",
- "frontend:build": "npm run build"
+  "name": "The Wiggler",
+  "assetdir": "./frontend/build",
+  "frontend:build": "npm run build",
+  "frontend:install": "npm i",
+  "wailsjsdir": "./frontend/build",
+  "version": "0.1.0",
+  "outputfilename": "the-wiggler",
+  "Author": {
+    "name": "a-poor",
+    "email": "45295232+a-poor@users.noreply.github.com"
+  },
+  "debounceMS": 100,
+  "devserverurl": "http://localhost:34115",
+  "appargs": ""
 }
